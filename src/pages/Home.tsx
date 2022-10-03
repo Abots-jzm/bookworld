@@ -1,10 +1,23 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import heroImg from "../assets/hero.jpg";
+import { useNavigate } from "react-router-dom";
 
-interface Props {}
+interface Props {
+	onSearch: (query: string) => void;
+}
 
-const Home = (props: Props) => {
+const Home = ({ onSearch }: Props) => {
+	const [enteredSearch, setEnteredSearch] = useState("");
+	const navigate = useNavigate();
+
+	function onFormSubmit(e: React.FormEvent) {
+		e.preventDefault();
+		navigate("/search");
+		onSearch(enteredSearch);
+		setEnteredSearch("");
+	}
+
 	return (
 		<Container>
 			<Layout>
@@ -15,8 +28,8 @@ const Home = (props: Props) => {
 						</Logo>
 						<Copy main>The world's books</Copy>
 						<Copy>at your fingertips</Copy>
-						<Search>
-							<SearchInput type="text" placeholder="search over 10 million books" />
+						<Search onSubmit={onFormSubmit}>
+							<SearchInput type="text" placeholder="search over 10 million books" onChange={(e) => setEnteredSearch(e.target.value)} value={enteredSearch} />
 							<SearchBtn type="submit">
 								<span className="material-symbols-outlined">search</span>
 							</SearchBtn>
