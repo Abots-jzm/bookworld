@@ -112,7 +112,7 @@ interface ICopy {
 	main?: boolean;
 }
 
-const Copy = styled.div<ICopy>`
+const Copy = styled.h1<ICopy>`
 	font-size: ${(props) => (props.main ? "7.2rem" : "5.2rem")};
 	font-weight: ${(props) => (props.main ? "700" : "100")};
 	margin-top: ${(props) => (props.main ? "15rem" : "0")};
