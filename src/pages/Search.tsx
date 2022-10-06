@@ -1,32 +1,40 @@
-import React, { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
 import BookItem from "../components/BookItem";
 import { useQuery } from "react-query";
-
-interface Props {
-	query?: string;
-}
+import Pagination from "../components/Pagination";
 
 async function getSearchResults(queryParams: string, pageNumber: number) {
-	if (!queryParams) return "no books available";
-
 	const startIndex = (pageNumber - 1) * 10;
 	const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${queryParams}&startIndex=${startIndex}&key=${process.env.REACT_APP_API_KEY}`);
 	return await res.json();
 }
 
-const Search = ({ query }: Props) => {
-	const [searchParams, setSearchParams] = useSearchParams(query ? { q: query, page: "1" } : { q: "", page: "1" });
+const Search = () => {
+	const navigate = useNavigate();
 
+	const [searchParams, setSearchParams] = useSearchParams();
 	const [enteredSearch, setEnteredSearch] = useState("");
+	const [queryParam, setQueryParam] = useState("");
+	const [pageNumber, setPageNumber] = useState(1);
 
-	const queryParam = searchParams.get("q") || "";
-	let pageNumber = +searchParams.get("page")! || 1;
+	useEffect(() => {
+		const query = searchParams.get("q");
+		const pageNo = searchParams.get("page");
+		if (!query || !pageNo) navigate("/");
+		else {
+			setQueryParam(query);
+			setPageNumber(+pageNo);
+		}
+	}, [navigate, searchParams]);
 
-	const { data, isError, isLoading } = useQuery(["search", queryParam, pageNumber], getSearchResults.bind(null, queryParam, pageNumber), {
+	let totalItems;
+	const { data, isError, isLoading } = useQuery(["search", queryParam, pageNumber], () => getSearchResults(queryParam, pageNumber), {
 		refetchOnWindowFocus: false,
+		enabled: !!queryParam && !!pageNumber,
 		select(data) {
+			totalItems = data.totalItems;
 			return data.items.map((item: any) => {
 				return {
 					id: item.id,
@@ -47,13 +55,20 @@ const Search = ({ query }: Props) => {
 	}
 
 	function nextPage() {
-		pageNumber++;
-		setSearchParams({ q: queryParam, page: pageNumber.toString() });
+		const pageNo = pageNumber + 1;
+		setPageNumber(pageNo);
+		setSearchParams({ q: queryParam, page: pageNo.toString() });
 	}
 
 	function prevPage() {
-		pageNumber--;
-		setSearchParams({ q: queryParam, page: pageNumber.toString() });
+		const pageNo = pageNumber - 1;
+		setPageNumber(pageNo);
+		setSearchParams({ q: queryParam, page: pageNo.toString() });
+	}
+
+	function selectedPage(pageNo: number) {
+		setPageNumber(pageNo);
+		setSearchParams({ q: queryParam, page: pageNo.toString() });
 	}
 
 	return (
@@ -66,13 +81,25 @@ const Search = ({ query }: Props) => {
 			</SearchPanel>
 			{isLoading && <Spinner />}
 			{isError && <ErrorMessage>An error occurred. Please Try again another time</ErrorMessage>}
-			{!isLoading && !isError && (
-				<BooksGrid>
-					{data.map((item: any) => (
-						<BookItem key={item.id} {...item} />
-					))}
-					{/*<PaginationContainer>yo</PaginationContainer>*/}
-				</BooksGrid>
+			{!isLoading && !isError && data && (
+				<>
+					<BooksGrid>
+						{data.map((item: any) => (
+							<BookItem key={item.id} {...item} />
+						))}
+					</BooksGrid>
+					<PaginationContainer>
+						<Pagination
+							onNextPage={nextPage}
+							onPrevPage={prevPage}
+							onSelectedPage={selectedPage}
+							totalItems={totalItems || 0}
+							currentPage={pageNumber}
+							itemsPerPage={10}
+							siblingCount={2}
+						/>
+					</PaginationContainer>
+				</>
 			)}
 		</Layout>
 	);
@@ -80,14 +107,12 @@ const Search = ({ query }: Props) => {
 
 export default Search;
 
-const PaginationButton = styled.div``;
-
 const PaginationContainer = styled.div`
-	width: 100%;
+	max-width: 40rem;
 	align-self: center;
-	background-color: red;
 	display: flex;
-	justify-content: space-between;
+	gap: 1rem;
+	margin: 5rem auto 10rem;
 `;
 
 const ErrorMessage = styled.p`

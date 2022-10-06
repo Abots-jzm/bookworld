@@ -3,19 +3,13 @@ import styled from "styled-components";
 import heroImg from "../assets/hero.jpg";
 import { useNavigate } from "react-router-dom";
 
-interface Props {
-	onSearch: (query: string) => void;
-}
-
-const Home = ({ onSearch }: Props) => {
+const Home = () => {
 	const [enteredSearch, setEnteredSearch] = useState("");
 	const navigate = useNavigate();
 
 	function onFormSubmit(e: React.FormEvent) {
 		e.preventDefault();
-		navigate("/search");
-		onSearch(enteredSearch);
-		setEnteredSearch("");
+		navigate(`/search?q=${enteredSearch}&page=1`);
 	}
 
 	return (
