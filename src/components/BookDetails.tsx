@@ -25,7 +25,7 @@ interface Props {
 	hideDetails: () => void;
 }
 
-const BookDetails = ({ bookId }: Props) => {
+const BookDetails = ({ bookId, hideDetails }: Props) => {
 	const [shownMore, setShownMore] = useState(false);
 
 	const { data, isLoading, isError } = useQuery(["details", bookId], fetchBookDetails.bind(null, bookId), {
@@ -61,7 +61,7 @@ const BookDetails = ({ bookId }: Props) => {
 
 	return (
 		<DetailsContainer thumbnail={data?.thumbnail}>
-			<Close>
+			<Close onClick={hideDetails}>
 				<span className="material-symbols-outlined">close</span>
 			</Close>
 			<OtherContainer>
