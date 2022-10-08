@@ -92,6 +92,10 @@ const Close = styled.div`
 	top: 2rem;
 	margin-left: 28rem;
 	color: #f8f9fa;
+
+	@media (hover: hover) {
+		cursor: pointer;
+	}
 `;
 
 const FindOutMore = styled.a`
