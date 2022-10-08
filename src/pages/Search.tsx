@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import styled, { keyframes } from "styled-components";
+import styled from "styled-components";
 import BookItem from "../components/BookItem";
 import { useQuery } from "react-query";
 import Pagination from "../components/Pagination";
+import BookDetails from "../components/BookDetails";
+import SkeletonLoader from "../ui/SkeletonLoader";
 
 async function getSearchResults(queryParams: string, pageNumber: number) {
 	const startIndex = (pageNumber - 1) * 10;
@@ -18,6 +20,8 @@ const Search = () => {
 	const [enteredSearch, setEnteredSearch] = useState("");
 	const [queryParam, setQueryParam] = useState("");
 	const [pageNumber, setPageNumber] = useState(1);
+	const [detailShown, setDetailShown] = useState(false);
+	const [currentDetailsId, setCurrentDetailsId] = useState<string>();
 
 	useEffect(() => {
 		const query = searchParams.get("q");
@@ -41,7 +45,6 @@ const Search = () => {
 					title: item.volumeInfo.title,
 					authors: item.volumeInfo?.authors || [],
 					year: item.volumeInfo?.publishedDate?.slice(0, 4) || "unknown",
-					description: item.volumeInfo.description,
 					thumbnail: item.volumeInfo?.imageLinks?.thumbnail || "",
 					categories: item.volumeInfo.categories,
 				};
@@ -51,24 +54,34 @@ const Search = () => {
 
 	function onFormSubmit(e: React.FormEvent) {
 		e.preventDefault();
-		setSearchParams({ q: enteredSearch, page: pageNumber.toString() });
+		setSearchParams({ q: enteredSearch, page: "1" });
+		setPageNumber(1);
+		setDetailShown(false);
 	}
 
 	function nextPage() {
 		const pageNo = pageNumber + 1;
 		setPageNumber(pageNo);
 		setSearchParams({ q: queryParam, page: pageNo.toString() });
+		setDetailShown(false);
 	}
 
 	function prevPage() {
 		const pageNo = pageNumber - 1;
 		setPageNumber(pageNo);
 		setSearchParams({ q: queryParam, page: pageNo.toString() });
+		setDetailShown(false);
 	}
 
 	function selectedPage(pageNo: number) {
 		setPageNumber(pageNo);
 		setSearchParams({ q: queryParam, page: pageNo.toString() });
+		setDetailShown(false);
+	}
+
+	function showDetails(id: string) {
+		setCurrentDetailsId(id);
+		setDetailShown(true);
 	}
 
 	return (
@@ -79,40 +92,61 @@ const Search = () => {
 					<span className="material-symbols-outlined">search</span>
 				</SearchBtn>
 			</SearchPanel>
-			{isLoading && <Spinner />}
-			{isError && <ErrorMessage>An error occurred. Please Try again another time</ErrorMessage>}
-			{!isLoading && !isError && data && (
-				<>
-					<BooksGrid>
-						{data.map((item: any) => (
-							<BookItem key={item.id} {...item} />
-						))}
-					</BooksGrid>
-					<PaginationContainer>
-						<Pagination
-							onNextPage={nextPage}
-							onPrevPage={prevPage}
-							onSelectedPage={selectedPage}
-							totalItems={totalItems || 0}
-							currentPage={pageNumber}
-							itemsPerPage={10}
-							siblingCount={2}
-						/>
-					</PaginationContainer>
-				</>
-			)}
+			<ResultsContainer>
+				{detailShown && currentDetailsId && <BookDetails hideDetails={() => setDetailShown(false)} bookId={currentDetailsId} />}
+				<SearchResults>
+					{isLoading && (
+						<BooksGrid>
+							<SkeletonLoader count={10} />
+						</BooksGrid>
+					)}
+					{isError && <ErrorMessage>An error occurred. Please Try again another time</ErrorMessage>}
+					{!isLoading && !isError && data && (
+						<>
+							<BooksGrid>
+								{data.map((item: any) => (
+									<BookItem key={item.id} {...item} showDetails={showDetails} />
+								))}
+							</BooksGrid>
+							<PaginationContainer>
+								<Pagination
+									onNextPage={nextPage}
+									onPrevPage={prevPage}
+									onSelectedPage={selectedPage}
+									totalItems={totalItems || 0}
+									currentPage={pageNumber}
+									itemsPerPage={10}
+									siblingCount={2}
+								/>
+							</PaginationContainer>
+						</>
+					)}
+				</SearchResults>
+			</ResultsContainer>
 		</Layout>
 	);
 };
 
 export default Search;
 
+const SearchResults = styled.div`
+	flex: 1;
+`;
+
+const ResultsContainer = styled.div`
+	display: flex;
+	flex-direction: row-reverse;
+	flex-wrap: wrap;
+	gap: 2rem;
+	justify-content: center;
+`;
+
 const PaginationContainer = styled.div`
 	max-width: 40rem;
 	align-self: center;
 	display: flex;
 	gap: 1rem;
-	margin: 5rem auto 10rem;
+	margin: 5rem auto 7rem;
 `;
 
 const ErrorMessage = styled.p`
@@ -120,35 +154,11 @@ const ErrorMessage = styled.p`
 	text-align: center;
 `;
 
-const rotate360 = keyframes`
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-`;
-
-const Spinner = styled.div`
-	animation: ${rotate360} 1s ease-in-out infinite;
-	margin: 10rem auto auto;
-
-	border-left: 3px solid #aaa;
-	border-right: 3px solid #aaa;
-	border-bottom: 3px solid #aaa;
-	border-top: 3px solid black;
-	background: transparent;
-	width: 5rem;
-	height: 5rem;
-	border-radius: 50%;
-`;
-
 const BooksGrid = styled.div`
 	margin: 5vh 0;
 	width: 100%;
 	display: grid;
 	justify-content: center;
-	justify-items: center;
 	grid-template-columns: repeat(auto-fit, minmax(32rem, 1fr));
 	gap: 2rem;
 `;

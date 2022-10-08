@@ -15,16 +15,18 @@ function getAuthorsText(authors: string[]) {
 }
 
 interface Props {
+	id: string;
 	thumbnail: string;
 	title: string;
 	authors: string[];
 	year: string;
 	categories?: string[];
+	showDetails: (id: string) => void;
 }
 
-const BookItem = ({ thumbnail, title, authors, year, categories }: Props) => {
+const BookItem = ({ id, thumbnail, title, authors, year, categories, showDetails }: Props) => {
 	return (
-		<Container>
+		<Container onClick={showDetails.bind(null, id)}>
 			<Image thumbnail={thumbnail || ""} />
 			<Details>
 				<Title>{truncateTxt(title, 27)}</Title>
@@ -78,8 +80,13 @@ const Details = styled.div`
 const Container = styled.div`
 	display: flex;
 	box-shadow: rgba(149, 157, 165, 0.2) 0 8px 24px;
+	border-radius: 3px;
 	gap: 2rem;
 	padding: 3rem;
+
+	@media (hover: hover) {
+		cursor: pointer;
+	}
 `;
 
 interface IImage {

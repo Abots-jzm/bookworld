@@ -78,6 +78,11 @@ const PaginationButton = styled.button<IPaginationButton>`
 		font-weight: 700;
 	}
 
+	&:active {
+		background-color: #d31300;
+		color: #f8f9fa;
+	}
+
 	@media (hover: hover) {
 		cursor: pointer;
 
