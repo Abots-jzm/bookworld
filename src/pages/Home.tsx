@@ -23,7 +23,7 @@ const Home = () => {
 						<Copy main>The world's books</Copy>
 						<Copy>at your fingertips</Copy>
 						<Search onSubmit={onFormSubmit}>
-							<SearchInput type="text" placeholder="search over 10 million books" onChange={(e) => setEnteredSearch(e.target.value)} value={enteredSearch} />
+							<SearchInput type="text" placeholder="search over 10 million books" onChange={(e) => setEnteredSearch(e.target.value)} value={enteredSearch} required />
 							<SearchBtn type="submit">
 								<span className="material-symbols-outlined">search</span>
 							</SearchBtn>
